@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use axum::{Router, Server, routing::get, extract::State, Json, response::IntoResponse};
+use axum::{Router, Server, routing::get, extract::State, Json, response::{IntoResponse, Html}};
 use sysinfo::{System, SystemExt, CpuExt};
 
 #[tokio::main]
@@ -26,8 +26,10 @@ struct AppState {
     sys: Arc<Mutex<System>>,
 }
 
-async fn root_get() -> &'static str {
-   "Welcome to Axtop"
+async fn root_get() -> impl IntoResponse {
+    let markup = tokio::fs::read_to_string("src/index.html").await.unwrap();
+
+   Html(markup)
 }
 
 async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
