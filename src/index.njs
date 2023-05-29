@@ -1,4 +1,20 @@
+import htm from "https://esm.sh/htm";
 import { h, render } from "https://esm.sh/preact";
+
+// Initialize htm with Preact
+const html = htm.bind(h);
+
+function App(props) {
+  return html` <div>
+    ${props.cpus.map((cpu) => {
+      return html`
+        <div>
+          <h3>${cpu.toFixed(1)}% usage</h3>
+        </div>
+      `;
+    })}
+  </div>`;
+}
 
 let i = 0;
 setInterval(async () => {
@@ -11,5 +27,5 @@ setInterval(async () => {
   let json = await response.json();
   const app = h("pre", null, JSON.stringify(json, null, 2));
 
-  render(app, document.body);
+  render(html`<${App} cpus=${json} />`, document.body);
 }, 1000);
