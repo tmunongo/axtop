@@ -1,0 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,100&display=swap");
+
+body {
+  align-items: center;
+  background: #fffff3;
+  display: flex;
+  justify-content: center;
+  transform: rotate(-90deg);
+}
+
+.bar {
+  background: #422b50;
+  color: red;
+  width: 20em;
+  height: 2em;
+  margin: 1em;
+
+  position: relative;
+}
+
+.bar .label {
+  z-index: 100;
+  text-align: center;
+}
+
+.bar .bar-inner {
+  background: #fae1df;
+  height: 100%;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  transition: width 300ms;
+}

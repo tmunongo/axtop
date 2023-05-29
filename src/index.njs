@@ -8,8 +8,9 @@ function App(props) {
   return html` <div>
     ${props.cpus.map((cpu) => {
       return html`
-        <div>
-          <h3>${cpu.toFixed(1)}% usage</h3>
+        <div class="bar">
+          <div class="bar-inner" style="width: ${cpu}%"></div>
+          <h3 class="label">${cpu.toFixed(1)}% usage</h3>
         </div>
       `;
     })}
@@ -28,4 +29,4 @@ setInterval(async () => {
   const app = h("pre", null, JSON.stringify(json, null, 2));
 
   render(html`<${App} cpus=${json} />`, document.body);
-}, 1000);
+}, 500);
