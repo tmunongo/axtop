@@ -6,14 +6,30 @@ use sysinfo::{System, SystemExt, CpuExt};
 #[tokio::main]
 
 async fn main() {
+    let app_state = AppState::default();
+
     let router = Router::new()
     .route("/", get(root_get))
     .route("/index.njs", get(indexnjs_get))
     .route("/index.css", get(indexcss_get))
     .route("/api/cpus", get(cpus_get))
-    .with_state(AppState {
-        sys: Arc::new(Mutex::new(System::new())),
+    .with_state(app_state.clone());
+    
+    // update CPU in the BG
+    tokio::task::spawn_blocking(move || {
+        let mut sys = System::new();
+        loop {
+            sys.refresh_cpu();
+            let v: Vec<_> = sys.cpus().iter().map(|cpu | cpu.cpu_usage()).collect();
+            {
+                let mut cpus = app_state.cpus.lock().unwrap();
+                *cpus = v;
+            }
+
+            std::thread::sleep(System::MINIMUM_CPU_UPDATE_INTERVAL);
+        }
     });
+
 
 let server = Server::bind(&"0.0.0.0:8081".parse().unwrap()).serve(router.into_make_service());
 
@@ -23,9 +39,9 @@ println!("Listening on {}", addr);
 server.await.unwrap();
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 struct AppState {
-    sys: Arc<Mutex<System>>,
+    cpus: Arc<Mutex<Vec<f32>>>
 }
 
 async fn root_get() -> impl IntoResponse {
@@ -51,18 +67,7 @@ async fn indexcss_get() -> impl IntoResponse {
 }
 
 async fn cpus_get(State(state): State<AppState>) -> impl IntoResponse {
-    let mut sys = state.sys.lock().unwrap();
-
-    sys.refresh_cpu();
-
-    let v: Vec<_> = sys.cpus().iter().map(|cpu| cpu.cpu_usage()).collect();
-    
-    // for (i, cpu) in sys.cpus().iter().enumerate() {
-    //     let i = i + 1;
-    //     let usage = cpu.cpu_usage();
-        
-    //     writeln!(&mut s,"CPU {i} {usage}%").unwrap();
-    // }
+    let v = state.cpus.lock().unwrap().clone();
 
     Json(v)
 }
